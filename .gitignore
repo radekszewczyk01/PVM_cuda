@@ -1,0 +1,22 @@
+# Training data (large binary files)
+PVM_data/
+PVM_data.zip
+*.zip
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Build artifacts
+cuda_native_backend/build/
+cuda_cpp_implementation/build/
+
+# Checkpoints / saves
+saves/
+*.bin
+
+# Editor / OS
+.DS_Store
+*.swp

@@ -34,6 +34,8 @@ class PVMManager(object):
         self._t.start()
         self.setup_display()
         self.fps = 0
+        self.inst_fps = 0
+        self.total_steps = 0
         self.do_display = True
         self.mode_dream = False
         self.mode_partial_dream = False
@@ -77,6 +79,8 @@ class PVMManager(object):
 
     def run(self, steps=10000):
         self.t_start = time.time()
+        self.t_previous = self.t_start
+        self.total_steps = steps
         for self.counter in range(steps):
             self.process_debug_cmds()
             if self.mode_pause and not self.mode_step:
@@ -226,12 +230,21 @@ class PVMManager(object):
 
     def printfps(self):
         if self.PVMObject.step % 100 == 0:
-            self.t_previous = self.t_now
+            t_prev = self.t_now if self.t_now else self.t_start
             self.t_now = time.time()
             elapsed = self.t_now - self.t_start
-            self.fps = 100 / (self.t_now - self.t_previous)
-            print("%d step, %2.2fs elapsed %2.2f fps, %2.2f inst fps \r" % (
-            self.PVMObject.step, elapsed, self.counter / elapsed, self.fps), end=' ')
+            interval = self.t_now - t_prev
+            self.inst_fps = 100.0 / interval if interval > 0 else 0.0
+            self.fps = self.counter / elapsed if elapsed > 0 else 0.0
+            pct = 100.0 * self.counter / self.total_steps if self.total_steps > 0 else 0.0
+            left = self.total_steps - self.counter
+            eta_s = int(left / self.inst_fps) if self.inst_fps > 0 else 0
+            eta_h, rem = divmod(eta_s, 3600)
+            eta_m, eta_sec = divmod(rem, 60)
+            print("%d/%d (%.1f%%) | fps: %.1f avg / %.1f inst | ETA: %dh%02dm%02ds   \r" % (
+                self.counter, self.total_steps, pct,
+                self.fps, self.inst_fps,
+                eta_h, eta_m, eta_sec), end='')
             sys.stdout.flush()
 
     def process_debug_cmds(self):
