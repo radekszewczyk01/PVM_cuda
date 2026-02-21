@@ -27,6 +27,8 @@ PVM_cuda/
 
 ## Performance comparison
 
+**Test hardware:** NVIDIA GeForce RTX 4060 Laptop GPU (8 GB VRAM, compute capability 8.9), driver 590.48.01 / CUDA 13.1
+
 | Metric               | Python implementation | C++ CUDA backend |
 |----------------------|-----------------------|------------------|
 | Estimated ETA (100M steps, `small.json`) | ~130 h | ~92 h |

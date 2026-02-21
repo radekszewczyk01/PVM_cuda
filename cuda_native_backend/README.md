@@ -37,6 +37,8 @@ Python's numpy pipeline allocated temporary arrays every step (resize, cvtColor,
 
 ## Performance
 
+**Test hardware:** NVIDIA GeForce RTX 4060 Laptop GPU (8 GB VRAM, compute capability 8.9), driver 590.48.01 / CUDA 13.1
+
 | | Python implementation | C++ native backend |
 |---|---|---|
 | ETA (100M steps, `small.json`) | ~130 h | ~92 h |
