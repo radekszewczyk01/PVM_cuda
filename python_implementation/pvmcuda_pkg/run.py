@@ -63,19 +63,19 @@ def execute():
         xx = SequenceModel.get_input_shape()[0]
         if args.dataset != "":
             if args.dataset.startswith("camvid"):
-                Data = data.CamVidDataProvider([args.path + x for x in datasets.sets[args.dataset]], xx, xx, block_size=block_size,
+                Data = data.CamVidDataProvider([os.path.join(args.path, x) for x in datasets.sets[args.dataset]], xx, xx, block_size=block_size,
                                                blocks_x=2*int(SequenceModel.specs['layer_shapes'][0]),
                                                blocks_y=2*int(SequenceModel.specs['layer_shapes'][0]),
                                                augment=int(args.augment))
             elif args.dataset.startswith("carla"):
-                Data = data_carla.CarlaVideoProvider([args.path + x for x in datasets.sets[args.dataset]], xx, xx,
+                Data = data_carla.CarlaVideoProvider([os.path.join(args.path, x) for x in datasets.sets[args.dataset]], xx, xx,
                                                block_size=block_size,
                                                blocks_x=2 * int(SequenceModel.specs['layer_shapes'][0]),
                                                blocks_y=2 * int(SequenceModel.specs['layer_shapes'][0]),
                                                augment=int(args.augment))
             else:
                 Data = data.ZipCollectionDataProvider(
-                    [args.path + x for x in datasets.sets[args.dataset]], xx, xx)
+                    [os.path.join(args.path, x) for x in datasets.sets[args.dataset]], xx, xx)
         elif args.file != "":
             if args.file.endswith("MOV") or args.file.endswith("mov") or args.file.endswith("avi") or args.file.endswith("mp4"):
                 Data = data.MovieDataProvider(os.path.join(args.path,args.file), xx, xx)

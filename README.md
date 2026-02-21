@@ -29,12 +29,28 @@ PVM_cuda/
 
 **Test hardware:** NVIDIA GeForce RTX 4060 Laptop GPU (8 GB VRAM, compute capability 8.9), driver 590.48.01 / CUDA 13.1
 
-| Metric               | Python implementation | C++ CUDA backend |
-|----------------------|-----------------------|------------------|
-| Estimated ETA (100M steps, `small.json`) | ~130 h | ~92 h |
-| Speedup              | baseline              | **~1.4×**        |
-| CUDA Graphs          | ✗                     | ✓                |
-| Async data upload    | ✗                     | ✓ (pinned mem + stream) |
+| Metric | Python implementation | C++ CUDA backend |
+|---|---|---|
+| Measured inst. fps (`small.json`) | ~215 fps | ~301 fps |
+| Estimated ETA (100M steps) | ~129 h | ~92 h |
+| Speedup | baseline | **~1.4×** |
+| CUDA Graphs | ✗ | ✓ |
+| Async data upload | ✗ | ✓ (pinned mem + stream) |
+
+Wyniki zmierzone na tym samym zestawie danych (`green_ball_long.pkl.zip`, model `small.json`, batch size 1).
+
+### Co oznacza output postępu?
+
+```
+6915/100000000 (0.0%) | fps: 0.5 avg / 301.4 inst | ETA: 92h08m39s
+```
+
+- **`6915/100000000`** — bieżący krok / łączna liczba kroków
+- **`fps: 0.5 avg`** — średnie fps od początku trenowania (niska wartość na początku bo liczy od t=0, zanim GPU się rozgrzeje)
+- **`fps: 301.4 inst`** — chwilowe fps z ostatniej sekundy — to jest **właściwa miara wydajności**
+- **`ETA`** — szacowany czas do końca na podstawie chwilowego fps
+
+> Średnie fps na początku jest mylące (GPU musi zbudować CUDA Graph i rozgrzać pamięć podręczną). Patrz na **inst fps** jako rzeczywistą metrykę.
 
 ---
 

@@ -76,27 +76,59 @@ cuda_native_backend/
 
 ## Quick start (Docker)
 
+Wszystkie komendy wykonuj z katalogu `cuda_native_backend/`.
+
+### 1. Zbuduj obraz
+
 ```bash
-# From the cuda_native_backend/ directory:
 ./docker_build.sh
-
-# Train on a zip file
-./docker_run.sh \
-    -S /model_zoo/small.json \
-    -f /pvm_data/green_ball_long.pkl.zip
-
-# Interactive shell inside container
-./docker_run.sh --shell
-# then: /pvm_cpp/build/pvm -S /model_zoo/small.json -f /pvm_data/green_ball_long.pkl.zip
-
-# Load checkpoint and continue
-./docker_run.sh \
-    -S /model_zoo/small.json \
-    -f /pvm_data/green_ball_long.pkl.zip \
-    -L /saves/pvm_save_model_000100000.bin
 ```
 
-The script mounts `../PVM_data` → `/pvm_data` and `../python_implementation/model_zoo` → `/model_zoo` automatically.
+> Przy pierwszym uruchomieniu pobiera nlohmann/json i kompiluje cały projekt (~1-2 min).  
+> Kolejne buildy są szybkie dzięki cache.
+
+### 2. Uruchom trening bezpośrednio
+
+```bash
+# Trening na jednym pliku zip
+./docker_run.sh -S /model_zoo/small.json -f /pvm_data/green_ball_long.pkl.zip
+
+# Z większym batch size (szybsze jeśli GPU ma wystarczająco VRAM)
+./docker_run.sh -S /model_zoo/small.json -f /pvm_data/green_ball_long.pkl.zip -b 4
+
+# Wznów z checkpointu
+./docker_run.sh -S /model_zoo/small.json \
+    -f /pvm_data/green_ball_long.pkl.zip \
+    -L /saves/pvm_save_pvm_000100000.bin
+```
+
+### 3. Tryb interaktywny (shell wewnątrz kontenera)
+
+```bash
+./docker_run.sh --shell
+```
+
+Wewnątrz kontenera:
+
+```bash
+/pvm_cpp/build/pvm -S /model_zoo/small.json -f /pvm_data/green_ball_long.pkl.zip
+```
+
+```bash
+# Inne dostępne pliki danych
+ls /pvm_data/
+
+# Dostępne konfiguracje modeli
+ls /model_zoo/
+
+# Checkpointy zapisują się do /saves/ (podmontowany na ./saves/ na hoście)
+ls /saves/
+```
+
+Skrypt `docker_run.sh` automatycznie montuje:
+- `../PVM_data` → `/pvm_data` (dane treningowe, tylko do odczytu)
+- `../python_implementation/model_zoo` → `/model_zoo` (konfiguracje modeli, tylko do odczytu)
+- `./saves` → `/saves` (checkpointy, zapis)
 
 ---
 
