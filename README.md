@@ -74,6 +74,112 @@ cd cuda_native_backend/
 
 ---
 
+## Running on a university GPU server
+
+These instructions assume the server has Docker + NVIDIA Container Toolkit installed and
+you have no write access outside of Docker (typical HPC / shared GPU setup).
+
+### Step 0 — log in and verify GPU
+
+```bash
+ssh <user>@<server>
+nvidia-smi          # check GPU model and CUDA version
+docker images       # see what base images are already available
+```
+
+---
+
+### Pure C + CUDA (cuda_native_c) — fastest
+
+```bash
+# 1. Spin up a cuda devel container (reuse one the server already has)
+docker run --rm -it --gpus all \
+    -v "$HOME/pvm_saves:/saves" \
+    nvidia/cuda:11.8.0-devel-ubuntu22.04 bash
+
+# 2. Inside the container — install deps and clone
+apt-get update && apt-get install -y git make curl unzip ffmpeg
+git clone https://github.com/radekszewczyk01/PVM_cuda /PVM_cuda
+cd /PVM_cuda/cuda_native_c
+
+# 3. Build (auto-detects GPU arch)
+make deps && make -j$(nproc)
+
+# 4. Train (synthetic data — no dataset needed)
+build/pvm_c -S ../python_implementation/model_zoo/small.json -o /saves/run_c
+
+# 4b. Train with a real dataset (zip or image directory)
+build/pvm_c -S ../python_implementation/model_zoo/small.json \
+            -f /path/to/dataset.zip -o /saves/run_c
+```
+
+Checkpoints are written to `~/pvm_saves/` on the host and persist after the container exits.
+Press **Ctrl+C** to stop — a final checkpoint is saved automatically.
+
+---
+
+### C++ CUDA backend (cuda_native_backend)
+
+```bash
+docker run --rm -it --gpus all \
+    -v "$HOME/pvm_saves:/saves" \
+    nvidia/cuda:11.8.0-devel-ubuntu22.04 bash
+
+# inside:
+apt-get update && apt-get install -y git cmake libopencv-dev
+git clone https://github.com/radekszewczyk01/PVM_cuda /PVM_cuda
+cd /PVM_cuda/cuda_native_backend
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
+
+# run (requires a data file — no synthetic fallback)
+# create a dummy image dir if you have no dataset:
+apt-get install -y imagemagick && mkdir /tmp/data
+convert -size 64x64 xc:gray /tmp/data/frame0001.jpg
+./pvm -S ../../python_implementation/model_zoo/small.json -f /tmp/data
+```
+
+---
+
+### Python implementation (pvmcuda_pkg)
+
+```bash
+docker run --rm -it --gpus all \
+    -v "$HOME/pvm_saves:/saves" \
+    nvidia/cuda:11.8.0-devel-ubuntu22.04 bash
+
+# inside:
+apt-get update && apt-get install -y git python3 python3-pip
+git clone https://github.com/radekszewczyk01/PVM_cuda /PVM_cuda
+cd /PVM_cuda/python_implementation
+
+pip3 install torch --index-url https://download.pytorch.org/whl/cu118
+pip3 install pycuda cupy-cuda11x opencv-python-headless numpy
+pip3 install -e .
+
+# run with synthetic data (-s) and skip readout model (-r)
+python3 -m pvmcuda_pkg.run -S model_zoo/small.json -s -r
+
+# run with a real zip dataset
+python3 -m pvmcuda_pkg.run -S model_zoo/small.json \
+        -f /path/to/dataset.zip -r
+```
+
+---
+
+### Performance comparison (RTX 5000 Ada, sm_89, synthetic data, small.json)
+
+| Implementation | inst. FPS | ETA (100M steps) |
+|---|---|---|
+| Pure C + CUDA Graphs (`cuda_native_c`) | ~650 | ~43 h |
+| C++ + CUDA Graphs (`cuda_native_backend`) | ~715 | ~39 h |
+| Python + pycuda (`pvmcuda_pkg`) | TBD | TBD |
+
+> C++ is slightly faster than pure C on the server GPUs because of more aggressive compiler optimisations in g++ vs nvcc `--x c` mode. The difference is small and both are far ahead of Python.
+
+---
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).  
