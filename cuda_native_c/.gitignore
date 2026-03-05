@@ -1,0 +1,29 @@
+# Build outputs
+build/
+
+# Checkpoint saves
+saves/
+
+# Downloaded third-party headers
+third_party/stb/stb_image.h
+
+# Object files / deps (in case of manual builds)
+*.o
+*.d
+*.a
+*.so
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python cache (if any scripts land here)
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
