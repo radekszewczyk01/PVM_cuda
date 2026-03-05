@@ -65,8 +65,9 @@ class PVMManager(object):
         for layer in range(len(self.PVMObject.specs['layer_shapes'])):
             shape = int(self.PVMObject.specs['layer_shapes'][layer]) * int(self.PVMObject.specs['hidden_block_size'])
             self.Display.add_picture("Layer %d" % layer, shape, shape, 0, -1)
-        print("Shape")
-        print(self.ReadoutObject.shape)
+        if self.ReadoutObject is not None:
+            print("Shape")
+            print(self.ReadoutObject.shape)
         #self.Display.add_picture("Label", self.ReadoutObject.shape, self.ReadoutObject.shape, 1, -1)
         self.Display.add_picture("Label (ground truth)", input_shape[0], input_shape[1], 1, -1)
         if self.ReadoutObject is not None:
