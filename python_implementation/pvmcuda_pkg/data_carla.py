@@ -196,7 +196,7 @@ class CarlaVidSingleDataProvider(DataProvider):
         for (i, c) in enumerate(self.cl):
             xx = i % self.block_size
             yy = i / self.block_size
-            label[xx::self.block_size, yy::self.block_size] = np.all(img == c[0], axis=-1).astype(np.float)
+            label[xx::self.block_size, yy::self.block_size] = np.all(img == c[0], axis=-1).astype(np.float32)
         return label
 
 

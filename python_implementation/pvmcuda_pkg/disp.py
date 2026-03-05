@@ -111,7 +111,7 @@ class FancyDisplay(object):
             cv2.putText(self._buf, name, (py-1, px - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color=(0, 0, 0), lineType=cv2.LINE_AA)
 
     def place_picture(self, name, image, flip_bgr=False):
-        if image.dtype == np.float or image.dtype == np.float32:
+        if image.dtype == np.float64 or image.dtype == np.float32:
             if len(image.shape) == 3:
                 self.place_rgb_float(self.pic_hash[name][0], self.pic_hash[name][1], image, flip_bgr=flip_bgr)
             else:

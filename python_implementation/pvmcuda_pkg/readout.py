@@ -25,7 +25,7 @@ class Readout(object):
             self.blocks_y = int(PVMObject.specs['layer_shapes'][0])
             self.PVMObject = PVMObject
             self.shape = int(self.blocks_x*self.heatmap_block_size)
-            sizes = np.zeros(int(PVMObject.specs['layer_shapes'][0]) * int(PVMObject.specs['layer_shapes'][0]), dtype=np.int)
+            sizes = np.zeros(int(PVMObject.specs['layer_shapes'][0]) * int(PVMObject.specs['layer_shapes'][0]), dtype=np.int64)
             blocks = 0
             i = 0
             for x in range(int(PVMObject.specs['layer_shapes'][0])):

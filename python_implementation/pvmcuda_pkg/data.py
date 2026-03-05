@@ -399,7 +399,7 @@ class CamVidSingleDataProvider(DataProvider):
         for (i, c) in enumerate(self.cl):
             xx = i % self.block_size
             yy = i / self.block_size
-            label[xx::self.block_size, yy::self.block_size] = np.all(img == c[0], axis=-1).astype(np.float)
+            label[xx::self.block_size, yy::self.block_size] = np.all(img == c[0], axis=-1).astype(np.float32)
         return label
 
     def decode_label1(self, label, blocks_x=None, blocks_y=None):
@@ -516,8 +516,8 @@ def IOU(img1, img2, rgb):
         B = np.all(img2 == rgb, axis=-1).astype(np.uint8)
         union = A | B
         inter = A & B
-        I1 = np.sum(inter).astype(np.float)/np.prod(A.shape)
-        U1 = np.sum(union).astype(np.float)/np.prod(A.shape)
+        I1 = np.sum(inter).astype(np.float64)/np.prod(A.shape)
+        U1 = np.sum(union).astype(np.float64)/np.prod(A.shape)
         if U1 == 0:
             return 1.0
         return I1/U1
