@@ -23,7 +23,7 @@ ifndef GPU
 GPU := $(shell nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null \
             | head -1 | tr -d '.' | sed 's/^/sm_/')
 ifeq ($(GPU),sm_)
-GPU := sm_86
+GPU := sm_89
 endif
 endif
 ARCH_FLAGS := -gencode arch=compute_$(subst sm_,,$(GPU)),code=$(GPU)
@@ -57,6 +57,7 @@ C_SRCS  := src/pvm_config.c \
            src/pvm_graph.c \
            src/data_provider.c \
            src/training_manager.c \
+           src/infer_runner.c \
            src/main.c
 
 CU_OBJS := $(patsubst src/%.cu, $(BUILD)/%.cu.o, $(CU_SRCS))
@@ -91,8 +92,9 @@ $(BUILD):
 # ── Dependencies: download stb_image.h ─────────────────────────────────────
 STB_DIR  := third_party/stb
 STB_IMG  := $(STB_DIR)/stb_image.h
+STB_WRT  := $(STB_DIR)/stb_image_write.h
 
-deps: $(STB_IMG)
+deps: $(STB_IMG) $(STB_WRT)
 
 $(STB_IMG):
 	@mkdir -p $(STB_DIR)
@@ -102,6 +104,15 @@ $(STB_IMG):
 	  || wget -q -O $(STB_IMG) \
 	  https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
 	@echo "OK: $(STB_IMG)"
+
+$(STB_WRT):
+	@mkdir -p $(STB_DIR)
+	@echo "Downloading stb_image_write.h from GitHub..."
+	@curl -fsSL -o $(STB_WRT) \
+	  https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h \
+	  || wget -q -O $(STB_WRT) \
+	  https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h
+	@echo "OK: $(STB_WRT)"
 
 # ── Housekeeping ─────────────────────────────────────────────────────────────
 clean:

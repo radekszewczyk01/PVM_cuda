@@ -20,7 +20,8 @@ COPY python_implementation/model_zoo/ /app/model_zoo/
 
 # Download stb_image.h and build from source (clean to avoid reusing host .o files)
 # GPU arch is passed via --build-arg GPU=sm_XX (see docker_build.sh)
-ARG GPU=sm_75
+# RTX 5000 Ada Generation = sm_89
+ARG GPU=sm_89
 RUN make deps && make clean && make -j$(nproc) GPU=${GPU}
 
 ENTRYPOINT ["./entrypoint.sh"]
