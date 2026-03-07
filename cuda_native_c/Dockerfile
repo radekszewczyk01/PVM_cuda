@@ -1,4 +1,7 @@
-FROM nvidia/cuda:12.3.0-devel-ubuntu22.04
+# Override with --build-arg BASE_IMAGE=... to reuse an already-pulled image
+# e.g. nvidia/cuda:11.8.0-devel-ubuntu22.04 (already on serwer-gpu3)
+ARG BASE_IMAGE=nvidia/cuda:12.3.0-devel-ubuntu22.04
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 # cuBLAS .so files live in the devel image under /usr/local/cuda/lib64

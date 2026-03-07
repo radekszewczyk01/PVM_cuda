@@ -1,0 +1,52 @@
+# Dockerfile.server – samodzielny build dla serwer-gpu3
+# Klonuje repo samodzielnie podczas budowania, bez potrzeby git clone na hoście.
+#
+# Użycie na serwerze (wystarczy ten jeden plik):
+#
+#   docker build \
+#     --build-arg GPU=sm_89 \
+#     -t pvm_cuda_c:latest \
+#     -f Dockerfile.server \
+#     .
+#
+# Lub z pustym kontekstem (nie potrzebujesz żadnych lokalnych plików):
+#
+#   docker build \
+#     --build-arg GPU=sm_89 \
+#     -t pvm_cuda_c:latest \
+#     -f Dockerfile.server \
+#     https://github.com/radekszewczyk01/PVM_cuda.git#main:cuda_native_c
+#     ^-- podaj branch jeśli inny niż main
+
+# Użyj obrazu już dostępnego na serwerze (oszczędza pobieranie ~7 GB)
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH:-}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    wget \
+    git \
+    unzip \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Klonuj repo bezpośrednio w obrazie
+ARG REPO=https://github.com/radekszewczyk01/PVM_cuda.git
+ARG BRANCH=main
+RUN git clone --depth=1 --branch ${BRANCH} ${REPO} /repo
+
+# Skopiuj potrzebne części
+RUN cp -r /repo/cuda_native_c/. /app/ \
+ && cp -r /repo/python_implementation/model_zoo /app/model_zoo \
+ && rm -rf /repo
+
+# GPU arch – RTX 5000 Ada Generation = sm_89
+ARG GPU=sm_89
+RUN make deps && make clean && make -j$(nproc) GPU=${GPU}
+
+ENTRYPOINT ["./entrypoint.sh"]
