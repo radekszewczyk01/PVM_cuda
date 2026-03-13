@@ -34,6 +34,7 @@ class PVMManager(object):
         self._t.start()
         self.setup_display()
         self.fps = 0
+        self.total_steps = 1
         self.do_display = True
         self.mode_dream = False
         self.mode_partial_dream = False
@@ -77,6 +78,7 @@ class PVMManager(object):
 
     def run(self, steps=10000):
         self.t_start = time.time()
+        self.total_steps = steps
         for self.counter in range(steps):
             self.process_debug_cmds()
             if self.mode_pause and not self.mode_step:
@@ -229,9 +231,26 @@ class PVMManager(object):
             self.t_previous = self.t_now
             self.t_now = time.time()
             elapsed = self.t_now - self.t_start
-            self.fps = 100 / (self.t_now - self.t_previous)
-            print("%d step, %2.2fs elapsed %2.2f fps, %2.2f inst fps \r" % (
-            self.PVMObject.step, elapsed, self.counter / elapsed, self.fps), end=' ')
+            if self.t_previous == 0:
+                self.fps = 0.0
+            else:
+                self.fps = 100 / max(self.t_now - self.t_previous, 1e-9)
+
+            avg_fps = self.counter / max(elapsed, 1e-9)
+            progress = self.counter / max(self.total_steps, 1) * 100.0
+
+            if self.counter == 0 or avg_fps <= 0:
+                eta_str = "--:--:--"
+            else:
+                remaining = int((self.total_steps - self.counter) / avg_fps)
+                hours, rem = divmod(remaining, 3600)
+                minutes, seconds = divmod(rem, 60)
+                eta_str = "%03d:%02d:%02d" % (hours, minutes, seconds)
+
+            msg = "%7d | %6.3f%% | avg %6.1f fps | inst %6.1f | ETA %s" % (
+                self.PVMObject.step, progress, avg_fps, self.fps, eta_str)
+            # Clear the current terminal line before drawing progress.
+            sys.stdout.write("\r\033[2K" + msg)
             sys.stdout.flush()
 
     def process_debug_cmds(self):

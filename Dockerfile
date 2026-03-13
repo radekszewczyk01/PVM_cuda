@@ -10,7 +10,10 @@ RUN apt-get update -y && apt-get install -y \
      python3-opencv \
      netcat \
      telnet 
-RUN pip3 install pycuda 
+RUN pip3 install "numpy<2" pycuda && \
+    grep -rL 'from __future__ import annotations' \
+        /usr/local/lib/python3.10/dist-packages/pycuda/compyte/ | \
+    xargs -I{} sed -i '1i from __future__ import annotations' {}
 COPY entrypoint.sh /
 ENTRYPOINT [ "/entrypoint.sh" ]
 #ENTRYPOINT "/bin/bash -c '/usr/bin/pip3 install -e .' && /bin/bash"

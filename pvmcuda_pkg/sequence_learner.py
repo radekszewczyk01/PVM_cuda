@@ -552,7 +552,7 @@ class PVM_object():
                 for l in range(layer_to_enable):
                     begin_idx += int(self.specs['layer_shapes'][l])**2
                 end_idx=begin_idx + int(self.specs['layer_shapes'][layer_to_enable])**2
-                print("Enabling layer %d" % layer_to_enable)
+                print("\nEnabling layer %d" % layer_to_enable)
                 print("Begin idx %d end idx %d" % (begin_idx, end_idx))
                 self.learning_rate_arr[begin_idx:end_idx] = float(self.specs['initial_learning_rate'])
                 self.learning_rate = float(self.specs['initial_learning_rate'])

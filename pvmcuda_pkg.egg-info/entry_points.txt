@@ -1,0 +1,3 @@
+[console_scripts]
+pvm = pvmcuda_pkg.run:execute
+
