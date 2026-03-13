@@ -52,6 +52,9 @@ class PVMManager(object):
         self.frames_to_dump = 0
         self.frames_dumped = 0
         self.evaluate = False
+        # Call visualize() only every vis_interval frames so GPU can run ahead.
+        # Set to 1 to restore per-frame visualization.
+        self.vis_interval = 100
 
     def setup_display(self):
         input_shape = self.PVMObject.get_input_shape()
@@ -108,7 +111,25 @@ class PVMManager(object):
                     self.PVMObject.backward_gpu()
                 # self.PVMObject.regularize(0.99)
                 self.printfps()
-                self.visualize()
+                # Throttle visualization: GPU→CPU transfers in visualize() (pop_prediction,
+                # pop_layer) cause implicit synchronization. Skipping them every
+                # vis_interval frames lets GPU and CPU overlap work.
+                needs_viz = (
+                    self.evaluate or
+                    self.video_recorder is not None or
+                    self.frames_to_dump > 0 or
+                    (self.snapshot and (self.DataProvider.get_pos() == self.snapoffset)) or
+                    (self.do_display and self.counter % self.vis_interval == 0)
+                )
+                if needs_viz:
+                    self.visualize()
+                elif self.do_display:
+                    # Keep the OpenCV window responsive on skipped frames.
+                    k = cv2.waitKey(1) & 0xFF
+                    if k == ord('Q'):
+                        self.stop_execution = True
+                    if k == ord('s'):
+                        self.save_state()
                 if self.mode_debug:
                     self.PVMObject.display_unit(1)
                     self.PVMObject.display_unit(len(self.PVMObject.graph)/2)

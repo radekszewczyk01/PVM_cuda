@@ -2,3 +2,5 @@ PVM_data.zip
 PVM_data
 __pycache__/
 *.pyc
+bundle_source.sh
+merged_source_code.txt
