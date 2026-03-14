@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 bundle_source.sh
 merged_source_code.txt
+pvmcuda_pkg/backend_c/libpvm.so

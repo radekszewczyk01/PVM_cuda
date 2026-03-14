@@ -1,0 +1,9 @@
+.git
+__pycache__
+*.pyc
+*.egg-info
+*.so
+PVM_data
+pngs
+*.zip
+.claude

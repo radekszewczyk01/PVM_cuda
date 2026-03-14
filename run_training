@@ -1,2 +1,11 @@
 #!/bin/bash
-pvm -S model_zoo/small.json -p ./PVM_data/ -k c -d green_ball_training
+echo "Select backend:"
+echo "  1) c      (C/CUDA)"
+echo "  2) python (PyCUDA)"
+read -rp "Choice [1]: " choice
+case "$choice" in
+    2|python) BACKEND=python ;;
+    *)        BACKEND=c ;;
+esac
+echo "Using backend: $BACKEND"
+pvm -S model_zoo/small.json -p ./PVM_data/ -k "$BACKEND" -d green_ball_training
