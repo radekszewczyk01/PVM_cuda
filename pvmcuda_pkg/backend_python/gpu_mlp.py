@@ -1,7 +1,7 @@
 # GPU PVM Implementation
 # (C) 2023 Filip Piekniewski 
 # filip@piekniewski.info
-import pvmcuda_pkg.gpu_routines as gpu_routines
+from . import gpu_routines
 import pycuda.gpuarray as gpuarray
 import numpy as np
 import pprint

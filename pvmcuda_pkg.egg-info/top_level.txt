@@ -1,3 +1,1 @@
-PVM_data
-model_zoo
 pvmcuda_pkg

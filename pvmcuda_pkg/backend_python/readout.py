@@ -2,8 +2,8 @@
 # (C) 2023 Filip Piekniewski 
 # filip@piekniewski.info
 import numpy as np
-import pvmcuda_pkg.gpu_mlp as gpu_mlp
-import pvmcuda_pkg.gpu_routines as gpu_routines
+from . import gpu_mlp
+from . import gpu_routines
 import pycuda.gpuarray as gpuarray
 import sys
 import zipfile

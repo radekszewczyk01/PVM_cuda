@@ -1,21 +1,20 @@
 # GPU PVM Implementation
-# (C) 2023 Filip Piekniewski 
+# (C) 2023 Filip Piekniewski
 # filip@piekniewski.info
 import os
 import argparse
 import json
-import pvmcuda_pkg.sequence_learner as sequence_learner
 import pvmcuda_pkg.data as data
 import pvmcuda_pkg.data_carla as data_carla
 import pvmcuda_pkg.datasets as datasets
 import pvmcuda_pkg.manager as manager
-import pvmcuda_pkg.readout as readout
-import pvmcuda_pkg.synthetic_data as synthetic_data
 
 def execute():
     parser = argparse.ArgumentParser(description="Description",
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-a", "--augment", help="Augment factor", type=str, default="0")
+    parser.add_argument("-k", "--backend", help="Choose backend: python or c", type=str, default="python",
+                        choices=["python", "c"])
     parser.add_argument("-L", "--load", help="Load a pre tgrained model", type=str, default="")
     parser.add_argument("-S", "--spec", help="Specification file name (file in .json format)", type=str, default="")
     parser.add_argument("-o", "--override_spec", help="Specification file name (file in .json format)", type=str, default="")
@@ -32,22 +31,34 @@ def execute():
     parser.add_argument('-O', '--options', type=json.loads,
                         help="Option dictionary (as described above) given in json form '{\"key1\": \"value1\"}\'.",
                         default='{}')
-    block_size = 4
+
     args = parser.parse_args()
+
+    # --- Load the chosen backend ---
+    if args.backend == "python":
+        print(f"[PVM] Using Python/PyCUDA backend")
+        from pvmcuda_pkg.backend_python import PVM_object, Readout, SyntheticDataProvider
+    elif args.backend == "c":
+        print(f"[PVM] Using C/CUDA backend")
+        from pvmcuda_pkg.backend_c import PVM_object, Readout, SyntheticDataProvider
+    else:
+        raise ValueError(f"Unknown backend: {args.backend}")
+
+    block_size = 4
     if args.spec != "" or args.load != "":
         if args.spec != "":
             name = os.path.splitext(os.path.basename(args.spec))[0]
             specs = json.load(open(args.spec, "r"))
-            SequenceModel = sequence_learner.PVM_object(specs=specs, name=name)
+            SequenceModel = PVM_object(specs=specs, name=name)
             if args.skip_readout:
                 ReadoutModel = None
             else:
                 if args.camvid != "" or args.dataset.startswith("camvid") or args.dataset.startswith("carla"):
-                    ReadoutModel = readout.Readout(SequenceModel, representation_size=150, heatmap_block_size=2*block_size)
+                    ReadoutModel = Readout(SequenceModel, representation_size=150, heatmap_block_size=2*block_size)
                 else:
-                    ReadoutModel = readout.Readout(SequenceModel)
+                    ReadoutModel = Readout(SequenceModel)
         if args.load != "":
-            SequenceModel = sequence_learner.PVM_object(specs=None)
+            SequenceModel = PVM_object(specs=None)
             SequenceModel.load(args.load)
             if args.override_spec != "":
                 SequenceModel.specs = json.load(open(args.override_spec, "r"))
@@ -55,9 +66,9 @@ def execute():
             if args.skip_readout:
                 ReadoutModel=None
             else:
-                ReadoutModel = readout.Readout()
+                ReadoutModel = Readout()
                 if not ReadoutModel.load(args.load):
-                    ReadoutModel = readout.Readout(SequenceModel)
+                    ReadoutModel = Readout(SequenceModel)
                 else:
                     ReadoutModel.set_pvm(SequenceModel)
         xx = SequenceModel.get_input_shape()[0]
@@ -85,16 +96,16 @@ def execute():
                 Data = data.CamVidSingleDataProvider(os.path.join(args.path, args.camvid), xx, xx, block_size=block_size, blocks_x=int(SequenceModel.specs['layer_shapes'][0]),
                                                blocks_y=int(SequenceModel.specs['layer_shapes'][0]))
         elif args.synthetic:
-            Data = synthetic_data.SyntheticDataProvider(xx, xx, block_size=block_size, blocks_x=int(SequenceModel.specs['layer_shapes'][0]),
+            Data = SyntheticDataProvider(xx, xx, block_size=block_size, blocks_x=int(SequenceModel.specs['layer_shapes'][0]),
                                                blocks_y=int(SequenceModel.specs['layer_shapes'][0]))
 
         else:
             raise Exception("No data file given")
         if args.test:
             Data.set_attr("test", True)
-        ModelManager= manager.PVMManager(PVMObject=SequenceModel, 
-                                         DataProvider=Data, 
-                                         ReadoutObject=ReadoutModel, 
+        ModelManager= manager.PVMManager(PVMObject=SequenceModel,
+                                         DataProvider=Data,
+                                         ReadoutObject=ReadoutModel,
                                          snapshot=args.snapshot)
         ModelManager.do_display = args.Display
         ModelManager.run(steps=100000000)
