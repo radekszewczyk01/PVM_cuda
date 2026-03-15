@@ -108,7 +108,7 @@ def execute():
                                          ReadoutObject=ReadoutModel,
                                          snapshot=args.snapshot)
         ModelManager.do_display = args.Display
-        ModelManager.run(steps=100000000)
+        ModelManager.run(steps=10000)
         ModelManager.stop()
 
 # Example command:

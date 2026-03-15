@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+# benchmark_training - Profiling wrapper for PVM training
+#
+# Collects GPU/CPU profiling data using NVIDIA Nsight Systems (nsys)
+# or Nsight Compute (ncu). Requires --privileged docker flag (see docker_run.sh).
+#
+# Usage:  ./benchmark_training
+#
+# Output files are saved to /pvm/profiles/ inside the container.
+
+set -euo pipefail
+
+PROFILE_DIR="./profiles"
+mkdir -p "$PROFILE_DIR"
+
+MODEL="model_zoo/small.json"
+DATA_PATH="./PVM_data/"
+DATASET="green_ball_training"
+
+# --- Backend selection ---
+echo "Select backend:"
+echo "  1) c      (C/CUDA)"
+echo "  2) python (PyCUDA)"
+read -rp "Choice [1]: " backend_choice
+case "$backend_choice" in
+    2|python) BACKEND=python ;;
+    *)        BACKEND=c ;;
+esac
+
+# --- Profiling tool selection ---
+echo ""
+echo "Select profiling method:"
+echo "  1) nsys  - Nsight Systems timeline  (recommended: shows CPU/GPU gaps)"
+echo "  2) ncu   - Nsight Compute kernels   (detailed per-kernel metrics)"
+echo "  3) none  - No profiler, just run training (dry-run sanity check)"
+read -rp "Choice [1]: " tool_choice
+
+# --- Duration / kernel count ---
+case "$tool_choice" in
+    2|ncu)
+        read -rp "Number of kernel launches to capture [10]: " ncu_count
+        NCU_COUNT="${ncu_count:-10}"
+        ;;
+    3|none)
+        ;;
+    *)
+        read -rp "Capture duration in seconds [120]: " nsys_dur
+        NSYS_DUR="${nsys_dur:-120}"
+        ;;
+esac
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+echo ""
+echo "========================================="
+echo "  Backend : $BACKEND"
+echo "  Model   : $MODEL"
+echo "  Dataset : $DATASET"
+echo "  Output  : $PROFILE_DIR/"
+echo "========================================="
+echo ""
+
+PVM_CMD="pvm -S $MODEL -p $DATA_PATH -k $BACKEND -d $DATASET"
+
+case "$tool_choice" in
+    2|ncu)
+        OUTFILE="$PROFILE_DIR/ncu_${BACKEND}_${TIMESTAMP}"
+        echo "Running Nsight Compute (capturing $NCU_COUNT kernel launches)..."
+        echo "Output: ${OUTFILE}.ncu-rep"
+        echo ""
+        ncu --set full \
+            -c "$NCU_COUNT" \
+            -o "$OUTFILE" \
+            $PVM_CMD
+        echo ""
+        echo "Done. Open with: ncu-ui ${OUTFILE}.ncu-rep"
+        ;;
+    3|none)
+        echo "Running training without profiler (Ctrl+C to stop)..."
+        echo ""
+        $PVM_CMD
+        ;;
+    *)
+        OUTFILE="$PROFILE_DIR/nsys_${BACKEND}_${TIMESTAMP}"
+        echo "Running Nsight Systems (capturing ${NSYS_DUR}s)..."
+        echo "Output: ${OUTFILE}.nsys-rep"
+        echo "Training will be terminated after profiling completes."
+        echo ""
+        timeout --signal=INT $((NSYS_DUR + 30)) \
+            nsys profile \
+                -w true \
+                -t cuda,nvtx,osrt \
+                --duration "$NSYS_DUR" \
+                -o "$OUTFILE" \
+                $PVM_CMD \
+        || true
+        echo ""
+        echo "Done. Open with: nsys-ui ${OUTFILE}.nsys-rep"
+        ;;
+esac

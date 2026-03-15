@@ -1,7 +1,7 @@
 #!/bin/bash
 
 xhost +
-docker run -it --gpus all -w /pvm \
+docker run -it --gpus all --privileged -w /pvm \
 	-v .:/pvm  \
         -e DISPLAY=$DISPLAY \
         -e XAUTHORITY=$XAUTH \

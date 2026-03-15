@@ -12,6 +12,15 @@ RUN apt-get update -y && apt-get install -y \
      netcat \
      telnet \
      make \
+     wget \
+  && rm -rf /var/lib/apt/lists/*
+
+# Add latest CUDA repo for up-to-date nsight tools (base image only has 12.0)
+RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb \
+  && dpkg -i cuda-keyring_1.1-1_all.deb \
+  && rm cuda-keyring_1.1-1_all.deb \
+  && apt-get update -y \
+  && apt-get install -y nsight-systems-2025.6.3 nsight-compute-2026.1.0 \
   && rm -rf /var/lib/apt/lists/*
 
 # Python dependencies
