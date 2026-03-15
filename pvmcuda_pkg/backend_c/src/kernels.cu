@@ -10,7 +10,7 @@
 
 /* mod2: gpu_dot, gpu_sgn */
 
-__global__ void gpu_dot(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_dot(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat = &mem1[ptr1[i]];
@@ -23,7 +23,7 @@ __global__ void gpu_dot(float *mem1, float *mem2, float *mem3, int *ptr1, int *p
   }
 }
 
-__global__ void gpu_sgn(float *mem1, int total_obj) {
+__global__ void gpu_sgn(float * __restrict__ mem1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   mem1[i]=copysignf(1.0, mem1[i]);
@@ -31,7 +31,7 @@ __global__ void gpu_sgn(float *mem1, int total_obj) {
 
 /* mod4: gpu_dot_transpose */
 
-__global__ void gpu_dot_transpose(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_dot_transpose(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat = &mem1[ptr1[i]];
@@ -47,7 +47,7 @@ __global__ void gpu_dot_transpose(float *mem1, float *mem2, float *mem3, int *pt
 
 /* mod41: gpu_dot_transpose_fast, gpu_sum_dot_transpose */
 
-__global__ void gpu_dot_transpose_fast(float *mem0, float *mem1, float *mem2, int *ptr1, int *ptr2, int *shape0, int *shape1, int *obj_id, int *row_id, int total_threads) {
+__global__ void gpu_dot_transpose_fast(float * __restrict__ mem0, float * __restrict__ mem1, float * __restrict__ mem2, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ shape0, int * __restrict__ shape1, int * __restrict__ obj_id, int * __restrict__ row_id, int total_threads) {
   const int thread_id = (blockIdx.x * blockDim.x + threadIdx.x);
   if (thread_id >= total_threads) return;
   const int i = obj_id[thread_id];
@@ -60,7 +60,7 @@ __global__ void gpu_dot_transpose_fast(float *mem0, float *mem1, float *mem2, in
   for(int l = 0; l<shape0_; l++) { mat_buf[l * shape1_ + k] = mat[l * shape1_ + k] * vec[l]; }
 }
 
-__global__ void gpu_sum_dot_transpose(float *mem0, float *mem1, int *ptr1, int *ptr3, int *shape0, int *shape1, int *obj_id, int *row_id, int total_threads) {
+__global__ void gpu_sum_dot_transpose(float * __restrict__ mem0, float * __restrict__ mem1, int * __restrict__ ptr1, int * __restrict__ ptr3, int * __restrict__ shape0, int * __restrict__ shape1, int * __restrict__ obj_id, int * __restrict__ row_id, int total_threads) {
   const int thread_id = (blockIdx.x * blockDim.x + threadIdx.x);
   if (thread_id >= total_threads) return;
   const int i = obj_id[thread_id];
@@ -74,7 +74,7 @@ __global__ void gpu_sum_dot_transpose(float *mem0, float *mem1, int *ptr1, int *
 
 /* mod5: gpu_dot_sigmoid */
 
-__global__ void gpu_dot_sigmoid(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, float *beta, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_dot_sigmoid(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, float * __restrict__ beta, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat = &mem1[ptr1[i]];
@@ -90,7 +90,7 @@ __global__ void gpu_dot_sigmoid(float *mem1, float *mem2, float *mem3, int *ptr1
 /* mod51: gpu_dot_fast, gpu_dot_fast_set_bias, gpu_dot_slow,
  *          gpu_sigmoid_fast, gpu_sigmoid_poly_fast */
 
-__global__ void gpu_dot_fast(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int *shape1, int *obj_id, int *row_id, int total_threads) {
+__global__ void gpu_dot_fast(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ shape0, int * __restrict__ shape1, int * __restrict__ obj_id, int * __restrict__ row_id, int total_threads) {
   const int thread_id = (blockIdx.x * blockDim.x + threadIdx.x);
   if (thread_id >= total_threads) return;
   const int i = obj_id[thread_id];
@@ -101,7 +101,7 @@ __global__ void gpu_dot_fast(float *mem1, float *mem2, float *mem3, int *ptr1, i
   for(int k = 0; k<shape0[i]; k++) { atomicAdd(&res[k], mat[k*shape1[i]+l] * vec[l]); }
 }
 
-__global__ void gpu_dot_fast_set_bias(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int *shape1, int *obj_id, int *row_id, int total_threads) {
+__global__ void gpu_dot_fast_set_bias(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ shape0, int * __restrict__ shape1, int * __restrict__ obj_id, int * __restrict__ row_id, int total_threads) {
   const int thread_id = (blockIdx.x * blockDim.x + threadIdx.x);
   if (thread_id >= total_threads) return;
   const int i = obj_id[thread_id];
@@ -113,7 +113,7 @@ __global__ void gpu_dot_fast_set_bias(float *mem1, float *mem2, float *mem3, int
   res[shape0[i]]=1.0;
 }
 
-__global__ void gpu_dot_slow(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, float *beta, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_dot_slow(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, float * __restrict__ beta, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat = &mem1[ptr1[i]];
@@ -126,14 +126,14 @@ __global__ void gpu_dot_slow(float *mem1, float *mem2, float *mem3, int *ptr1, i
   }
 }
 
-__global__ void gpu_sigmoid_fast(float *mem1, int *ptr1, float *beta, int *shape0, int total_obj) {
+__global__ void gpu_sigmoid_fast(float * __restrict__ mem1, int * __restrict__ ptr1, float * __restrict__ beta, int * __restrict__ shape0, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * res = &mem1[ptr1[i]];
   for(int k = 0; k<shape0[i]; k++) { res[k] = 1.0/(1.0+expf(-beta[i]*res[k])); }
 }
 
-__global__ void gpu_sigmoid_poly_fast(float *mem1, int *ptr1, float *beta, int *shape0, int total_obj) {
+__global__ void gpu_sigmoid_poly_fast(float * __restrict__ mem1, int * __restrict__ ptr1, float * __restrict__ beta, int * __restrict__ shape0, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * res = &mem1[ptr1[i]];
@@ -142,7 +142,7 @@ __global__ void gpu_sigmoid_poly_fast(float *mem1, int *ptr1, float *beta, int *
 
 /* mod7: gpu_dot_sigmoid_poly */
 
-__global__ void gpu_dot_sigmoid_poly(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_dot_sigmoid_poly(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat = &mem1[ptr1[i]];
@@ -157,7 +157,7 @@ __global__ void gpu_dot_sigmoid_poly(float *mem1, float *mem2, float *mem3, int 
 
 /* mod8: gpu_sigmoid_der_mul */
 
-__global__ void gpu_sigmoid_der_mul(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int total_obj) {
+__global__ void gpu_sigmoid_der_mul(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int *ptr1, int *ptr2, int *ptr3, int * __restrict__ shape0, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * vec0 = &mem1[ptr1[i]];
@@ -168,7 +168,7 @@ __global__ void gpu_sigmoid_der_mul(float *mem1, float *mem2, float *mem3, int *
 
 /* mod9: gpu_sigmoid_poly_der_mul */
 
-__global__ void gpu_sigmoid_poly_der_mul(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int total_obj) {
+__global__ void gpu_sigmoid_poly_der_mul(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int *ptr1, int *ptr2, int *ptr3, int * __restrict__ shape0, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * vec0 = &mem1[ptr1[i]];
@@ -185,7 +185,7 @@ __global__ void gpu_sigmoid_poly_der_mul(float *mem1, float *mem2, float *mem3, 
 
 /* mod3: gpu_outer_simple */
 
-__global__ void gpu_outer_simple(float *mem1, float *mem2, float *mem3, int *ptr1, int *ptr2, int *ptr3, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_outer_simple(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat = &mem3[ptr3[i]];
@@ -198,7 +198,7 @@ __global__ void gpu_outer_simple(float *mem1, float *mem2, float *mem3, int *ptr
 
 /* mod6: gpu_generalized_outer */
 
-__global__ void gpu_generalized_outer(float *mem1, float *mem2, float *mem3, float *mem4, int *ptr1, int *ptr2, int *ptr3, int *ptr4, int *shape0, int *shape1, float *alpha, float *beta, int total_obj) {
+__global__ void gpu_generalized_outer(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, float * __restrict__ mem4, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ ptr4, int * __restrict__ shape0, int * __restrict__ shape1, float * __restrict__ alpha, float * __restrict__ beta, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat0 = &mem3[ptr3[i]];
@@ -219,7 +219,7 @@ __global__ void gpu_generalized_outer(float *mem1, float *mem2, float *mem3, flo
 
 /* mod61: gpu_generalized_outer_fast */
 
-__global__ void gpu_generalized_outer_fast(float *mem1, float *mem2, float *mem3, float *mem4, int *ptr1, int *ptr2, int *ptr3, int *ptr4, int *shape0, int *shape1, float *alpha, float *beta, int *obj_id, int *row_id, int total_threads) {
+__global__ void gpu_generalized_outer_fast(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, float * __restrict__ mem4, int * __restrict__ ptr1, int * __restrict__ ptr2, int *ptr3, int *ptr4, int * __restrict__ shape0, int * __restrict__ shape1, float * __restrict__ alpha, float * __restrict__ beta, int * __restrict__ obj_id, int * __restrict__ row_id, int total_threads) {
   const int thread_id = (blockIdx.x * blockDim.x + threadIdx.x);
   if (thread_id >= total_threads) return;
   const int i = obj_id[thread_id];
@@ -237,7 +237,7 @@ __global__ void gpu_generalized_outer_fast(float *mem1, float *mem2, float *mem3
 
 /* mod62: gpu_generalized_outer_fast2, gpu_generalized_outer_fast3 */
 
-__global__ void gpu_generalized_outer_fast2(float *mem1, float *mem2, float *mem3, float *mem4, int *ptr1, int *ptr2, int *ptr3, int *ptr4, int *shape0, int *shape1, float alpha, float beta, int *obj_id, int *row_id, int total_threads) {
+__global__ void gpu_generalized_outer_fast2(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, float * __restrict__ mem4, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ ptr3, int * __restrict__ ptr4, int * __restrict__ shape0, int * __restrict__ shape1, float alpha, float beta, int * __restrict__ obj_id, int * __restrict__ row_id, int total_threads) {
   const int thread_id = (blockIdx.x * blockDim.x + threadIdx.x);
   if (thread_id >= total_threads) return;
   const int i = obj_id[thread_id];
@@ -251,7 +251,7 @@ __global__ void gpu_generalized_outer_fast2(float *mem1, float *mem2, float *mem
   for(int l = 0; l<shape0_; l++) { res[l * shape1_ + k] = beta * mat0[l * shape1_ + k] + alpha * vec0[l] * vec1[k]; }
 }
 
-__global__ void gpu_generalized_outer_fast3(float *mem1, float *mem2, float *mem3, float *mem4, int *ptr1, int *ptr2, int *ptr3, int *ptr4, int *shape0, int *shape1, float *alpha, float *beta, int *obj_id, int *row_id, int total_threads) {
+__global__ void gpu_generalized_outer_fast3(float * __restrict__ mem1, float * __restrict__ mem2, float * __restrict__ mem3, float * __restrict__ mem4, int * __restrict__ ptr1, int * __restrict__ ptr2, int *ptr3, int *ptr4, int * __restrict__ shape0, int * __restrict__ shape1, float * __restrict__ alpha, float * __restrict__ beta, int * __restrict__ obj_id, int * __restrict__ row_id, int total_threads) {
   const int thread_id = (blockIdx.x * blockDim.x + threadIdx.x);
   if (thread_id >= total_threads) return;
   const int i = obj_id[thread_id];
@@ -267,7 +267,7 @@ __global__ void gpu_generalized_outer_fast3(float *mem1, float *mem2, float *mem
 
 /* mod10: gpu_add */
 
-__global__ void gpu_add(float *mem1, float *mem2, int *ptr1, int *ptr2, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_add(float * __restrict__ mem1, float * __restrict__ mem2, int *ptr1, int *ptr2, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat0 = &mem1[ptr1[i]];
@@ -281,7 +281,7 @@ __global__ void gpu_add(float *mem1, float *mem2, int *ptr1, int *ptr2, int *sha
 
 /* mod11: gpu_mov */
 
-__global__ void gpu_mov(float *mem1, float *mem2, int *ptr1, int *ptr2, int *shape0, int *shape1, int total_obj) {
+__global__ void gpu_mov(float * __restrict__ mem1, float * __restrict__ mem2, int * __restrict__ ptr1, int * __restrict__ ptr2, int * __restrict__ shape0, int * __restrict__ shape1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   float * mat0 = &mem1[ptr1[i]];
@@ -293,7 +293,7 @@ __global__ void gpu_mov(float *mem1, float *mem2, int *ptr1, int *ptr2, int *sha
 
 /* mod12: gpu_dist_frame, gpu_dist_frame4 */
 
-__global__ void gpu_dist_frame(float *frame_arr, float *input_obj_mem, int *ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_dist_frame(float * __restrict__ frame_arr, float * __restrict__ input_obj_mem, int * __restrict__ ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -313,7 +313,7 @@ __global__ void gpu_dist_frame(float *frame_arr, float *input_obj_mem, int *ptr2
   }
 }
 
-__global__ void gpu_dist_frame4(float *frame_arr, float *input_obj_mem, int *ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_dist_frame4(float * __restrict__ frame_arr, float * __restrict__ input_obj_mem, int * __restrict__ ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -337,7 +337,7 @@ __global__ void gpu_dist_frame4(float *frame_arr, float *input_obj_mem, int *ptr
 /* mod13: gpu_calc_error_frame, gpu_calc_error_frame_1ch,
  *          gpu_calc_abs_diff_error_frame_1ch */
 
-__global__ void gpu_calc_error_frame(float *frame_arr, float *out_obj_mem, int *ptr2, float *error_obj_mem, int *ptr3, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_calc_error_frame(float * __restrict__ frame_arr, float * __restrict__ out_obj_mem, int * __restrict__ ptr2, float * __restrict__ error_obj_mem, int * __restrict__ ptr3, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -356,7 +356,7 @@ __global__ void gpu_calc_error_frame(float *frame_arr, float *out_obj_mem, int *
   }
 }
 
-__global__ void gpu_calc_error_frame_1ch(float *frame_arr, float *out_obj_mem, int *ptr2, float *error_obj_mem, int *ptr3, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_calc_error_frame_1ch(float * __restrict__ frame_arr, float * __restrict__ out_obj_mem, int * __restrict__ ptr2, float * __restrict__ error_obj_mem, int * __restrict__ ptr3, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -373,7 +373,7 @@ __global__ void gpu_calc_error_frame_1ch(float *frame_arr, float *out_obj_mem, i
   }
 }
 
-__global__ void gpu_calc_abs_diff_error_frame_1ch(float *frame_arr, float *out_obj_mem, int *ptr2, float *error_obj_mem, int *ptr3, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_calc_abs_diff_error_frame_1ch(float * __restrict__ frame_arr, float * __restrict__ out_obj_mem, int * __restrict__ ptr2, float * __restrict__ error_obj_mem, int * __restrict__ ptr3, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -393,7 +393,7 @@ __global__ void gpu_calc_abs_diff_error_frame_1ch(float *frame_arr, float *out_o
 /* mod14: gpu_collect_frame4, gpu_collect_frame,
  *          gpu_collect_frame_1ch */
 
-__global__ void gpu_collect_frame4(float *frame_arr, float *input_obj_mem, int *ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_collect_frame4(float * __restrict__ frame_arr, float * __restrict__ input_obj_mem, int * __restrict__ ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -413,7 +413,7 @@ __global__ void gpu_collect_frame4(float *frame_arr, float *input_obj_mem, int *
   }
 }
 
-__global__ void gpu_collect_frame(float *frame_arr, float *input_obj_mem, int *ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_collect_frame(float * __restrict__ frame_arr, float * __restrict__ input_obj_mem, int * __restrict__ ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -432,7 +432,7 @@ __global__ void gpu_collect_frame(float *frame_arr, float *input_obj_mem, int *p
   }
 }
 
-__global__ void gpu_collect_frame_1ch(float *frame_arr, float *input_obj_mem, int *ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
+__global__ void gpu_collect_frame_1ch(float * __restrict__ frame_arr, float * __restrict__ input_obj_mem, int * __restrict__ ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int input_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -451,7 +451,7 @@ __global__ void gpu_collect_frame_1ch(float *frame_arr, float *input_obj_mem, in
 
 /* mod141: gpu_collect_activ */
 
-__global__ void gpu_collect_activ(unsigned int *frame_arr, float *input_obj_mem, int *ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int ptr_offset, int total_obj) {
+__global__ void gpu_collect_activ(unsigned int * __restrict__ frame_arr, float * __restrict__ input_obj_mem, int * __restrict__ ptr2, int shape0, int shape1, int dx, int dy, int sx, int sy, int ptr_offset, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int x_block_ind = i / dy;
@@ -472,20 +472,20 @@ __global__ void gpu_collect_activ(unsigned int *frame_arr, float *input_obj_mem,
  *          gpu_set_one_hot_error, gpu_copy_blocks_comp,
  *          gpu_copy_blocks_sigmoid */
 
-__global__ void gpu_copy_blocks(float *from_arr, float *to_arr, int *from_ptr, int *from_qnt, int *to_ptr, int total_obj) {
+__global__ void gpu_copy_blocks(float * __restrict__ from_arr, float * __restrict__ to_arr, int * __restrict__ from_ptr, int * __restrict__ from_qnt, int * __restrict__ to_ptr, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int n = from_qnt[i];
   for (int j=0; j<n; j++) { to_arr[to_ptr[i]+j] = from_arr[from_ptr[i]+j]; }
 }
 
-__global__ void gpu_copy_blocks_fixed(float *from_arr, float *to_arr, int *from_ptr, int *to_ptr, int from_qnt, float mul, int total_obj) {
+__global__ void gpu_copy_blocks_fixed(float * __restrict__ from_arr, float * __restrict__ to_arr, int * __restrict__ from_ptr, int * __restrict__ to_ptr, int from_qnt, float mul, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   for (int j=0; j<from_qnt; j++) { to_arr[to_ptr[i]+j] = mul*from_arr[from_ptr[i]+j]; }
 }
 
-__global__ void gpu_set_one_hot_error(float *from_arr, int *from_ptr, float *to_arr, int *to_ptr, int hot, int length, int total_obj) {
+__global__ void gpu_set_one_hot_error(float * __restrict__ from_arr, int * __restrict__ from_ptr, float * __restrict__ to_arr, int * __restrict__ to_ptr, int hot, int length, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   for (int j=0; j<length; j++) {
@@ -494,14 +494,14 @@ __global__ void gpu_set_one_hot_error(float *from_arr, int *from_ptr, float *to_
   }
 }
 
-__global__ void gpu_copy_blocks_comp(float *from_arr, float *to_arr, int *from_ptr, int *from_qnt, int *to_ptr, int total_obj) {
+__global__ void gpu_copy_blocks_comp(float * __restrict__ from_arr, float * __restrict__ to_arr, int * __restrict__ from_ptr, int * __restrict__ from_qnt, int * __restrict__ to_ptr, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int n = from_qnt[i];
   for (int j=0; j<n; j++) { to_arr[to_ptr[i]+j] = 0.8 * from_arr[from_ptr[i]+j] + 0.1; }
 }
 
-__global__ void gpu_copy_blocks_sigmoid(float *from_arr, float *to_arr, int *from_ptr, int *from_qnt, int *to_ptr, float beta, int total_obj) {
+__global__ void gpu_copy_blocks_sigmoid(float * __restrict__ from_arr, float * __restrict__ to_arr, int * __restrict__ from_ptr, int * __restrict__ from_qnt, int * __restrict__ to_ptr, float beta, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   int n = from_qnt[i];
@@ -510,7 +510,7 @@ __global__ void gpu_copy_blocks_sigmoid(float *from_arr, float *to_arr, int *fro
 
 /* mod16: gpu_clip */
 
-__global__ void gpu_clip(float *from_arr, float val0, float val1, int total_obj) {
+__global__ void gpu_clip(float * __restrict__ from_arr, float val0, float val1, int total_obj) {
   const int i = (blockIdx.x * blockDim.x + threadIdx.x);
   if (i>=total_obj) return;
   if (from_arr[i]>val1) { from_arr[i]=val1; }

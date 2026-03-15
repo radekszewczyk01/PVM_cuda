@@ -20,12 +20,12 @@
  *  Small helper kernels (file-local)
  * ========================================================================= */
 
-__global__ void axpy_neg(float *a, float *b, int n) {
+__global__ void axpy_neg(float * __restrict__ a, float * __restrict__ b, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) b[i] = a[i] - b[i];
 }
 
-__global__ void axpy_add(float *a, float *b, int n) {
+__global__ void axpy_add(float * __restrict__ a, float * __restrict__ b, int n) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < n) b[i] += a[i];
 }
